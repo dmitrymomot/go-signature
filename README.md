@@ -1,6 +1,8 @@
 # go-signature
 
 Just a small library to get a signed string with a payload.
+It helps me to create confirmation tokens without using database.
+> Don't use this library to protect sensitive data!
 
 ## Usage
 
