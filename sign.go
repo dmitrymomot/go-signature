@@ -14,7 +14,7 @@ type tokenClaims struct {
 }
 
 // SigningKey option, should be set while build application
-var signingKey string
+var SigningKey string
 
 // New returns sha1-signed string without expiration time
 func New(data interface{}) (string, error) {
@@ -57,7 +57,7 @@ func newToken(data interface{}, ttl int64, fn hmacFunc) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return base64Encode([]byte(fmt.Sprintf("%s.%s", string(b), fn(b, []byte(signingKey))))), nil
+	return base64Encode([]byte(fmt.Sprintf("%s.%s", string(b), fn(b, []byte(SigningKey))))), nil
 }
 
 func parseToken(token string, fn hmacFunc) (interface{}, error) {
@@ -73,7 +73,7 @@ func parseToken(token string, fn hmacFunc) (interface{}, error) {
 	payload := []byte(tokenParts[0])
 	signature := []byte(tokenParts[1])
 
-	if err := validateHmac(payload, signature, []byte(signingKey), fn); err != nil {
+	if err := validateHmac(payload, signature, []byte(SigningKey), fn); err != nil {
 		return nil, err
 	}
 
