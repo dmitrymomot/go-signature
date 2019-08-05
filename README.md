@@ -14,9 +14,10 @@ go get -u github.com/dmitrymomot/go-signature
 import signature "github.com/dmitrymomot/go-signature"
 
 ...
-signature.SigningKey = "your$ecret#key"
+signature.SetSigningKey("secret%key")
 ...
 ```
+Signing key will be set globally, so you don't need defining it each times
 
 ### Create signed string:
 ```golang
