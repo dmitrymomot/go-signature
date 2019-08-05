@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-type tokenClaims struct {
-	Payload   interface{} `json:"p"`
-	ExpiresAt int64       `json:"e,omitempty"`
-}
+// SigningKey option
+var signingKey string
 
-// SigningKey option, should be set while build application
-var SigningKey string
+// SetSigningKey helper to set up global signing key
+func SetSigningKey(sk string) {
+	signingKey = sk
+}
 
 // New returns sha1-signed string without expiration time
 func New(data interface{}) (string, error) {
@@ -48,6 +48,11 @@ func Parse256(token string) (interface{}, error) {
 	return parseToken(token, calculateHmac256)
 }
 
+type tokenClaims struct {
+	Payload   interface{} `json:"p"`
+	ExpiresAt int64       `json:"e,omitempty"`
+}
+
 func newToken(data interface{}, ttl int64, fn hmacFunc) (string, error) {
 	claims := &tokenClaims{Payload: data}
 	if ttl > 0 {
@@ -57,23 +62,24 @@ func newToken(data interface{}, ttl int64, fn hmacFunc) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return base64Encode([]byte(fmt.Sprintf("%s.%s", string(b), fn(b, []byte(SigningKey))))), nil
+	return fmt.Sprintf("%s.%s", base64Encode(b), base64Encode([]byte(fn(b, []byte(signingKey))))), nil
 }
 
 func parseToken(token string, fn hmacFunc) (interface{}, error) {
-	btoken, err := base64Decode(token)
-	if err != nil {
-		return nil, errors.New("invalid token")
-	}
-	tokenParts := strings.Split(string(btoken), ".")
+	tokenParts := strings.Split(token, ".")
 	if len(tokenParts) != 2 {
 		return nil, errors.New("invalid token")
 	}
+	payload, err := base64Decode(tokenParts[0])
+	if err != nil {
+		return nil, errors.New("could not decode payload")
+	}
+	signature, err := base64Decode(tokenParts[1])
+	if err != nil {
+		return nil, errors.New("could not decode signature")
+	}
 
-	payload := []byte(tokenParts[0])
-	signature := []byte(tokenParts[1])
-
-	if err := validateHmac(payload, signature, []byte(SigningKey), fn); err != nil {
+	if err := validateHmac(payload, signature, []byte(signingKey), fn); err != nil {
 		return nil, err
 	}
 

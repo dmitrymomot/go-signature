@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{"success", args{bdata}, "eyJwIjoiWkdGMFlRPT0ifS45YzIxMDlmY2I1NDQ2NTE2MTQ0NTUyNjczMGRlNmE0YjI2YTkwOTgz", false},
+		{"success", args{bdata}, "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -36,7 +36,7 @@ func TestNew(t *testing.T) {
 
 func TestNew256(t *testing.T) {
 	var bdata = []byte("data")
-	var token = "eyJwIjoiWkdGMFlRPT0ifS42MTJmYzE4MGFlNGNlYWViNTdhYjc4NTBkNDVkY2FiMzE2NGRjMmJhMzYzZTQ3MWRmOTc5MmQ4NzdhMTFiMzEz"
+	var token = "eyJwIjoiWkdGMFlRPT0ifQ.NjEyZmMxODBhZTRjZWFlYjU3YWI3ODUwZDQ1ZGNhYjMxNjRkYzJiYTM2M2U0NzFkZjk3OTJkODc3YTExYjMxMw"
 	type args struct {
 		data interface{}
 	}
@@ -64,7 +64,7 @@ func TestNew256(t *testing.T) {
 
 func TestNewTemporary(t *testing.T) {
 	var bdata = []byte("data")
-	var token = "eyJwIjoiWkdGMFlRPT0ifS45YzIxMDlmY2I1NDQ2NTE2MTQ0NTUyNjczMGRlNmE0YjI2YTkwOTgz"
+	var token = "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw"
 	type args struct {
 		data interface{}
 		ttl  int64
@@ -93,7 +93,7 @@ func TestNewTemporary(t *testing.T) {
 
 func TestNew256Temporary(t *testing.T) {
 	var bdata = []byte("data")
-	var token = "eyJwIjoiWkdGMFlRPT0ifS42MTJmYzE4MGFlNGNlYWViNTdhYjc4NTBkNDVkY2FiMzE2NGRjMmJhMzYzZTQ3MWRmOTc5MmQ4NzdhMTFiMzEz"
+	var token = "eyJwIjoiWkdGMFlRPT0ifQ.NjEyZmMxODBhZTRjZWFlYjU3YWI3ODUwZDQ1ZGNhYjMxNjRkYzJiYTM2M2U0NzFkZjk3OTJkODc3YTExYjMxMw"
 	type args struct {
 		data interface{}
 		ttl  int64
@@ -121,7 +121,7 @@ func TestNew256Temporary(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	var token = "eyJwIjoiWkdGMFlRPT0ifS45YzIxMDlmY2I1NDQ2NTE2MTQ0NTUyNjczMGRlNmE0YjI2YTkwOTgz"
+	var token = "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw"
 	type args struct {
 		token string
 	}
@@ -148,7 +148,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestParse256(t *testing.T) {
-	var token = "eyJwIjoiWkdGMFlRPT0ifS42MTJmYzE4MGFlNGNlYWViNTdhYjc4NTBkNDVkY2FiMzE2NGRjMmJhMzYzZTQ3MWRmOTc5MmQ4NzdhMTFiMzEz"
+	var token = "eyJwIjoiWkdGMFlRPT0ifQ.NjEyZmMxODBhZTRjZWFlYjU3YWI3ODUwZDQ1ZGNhYjMxNjRkYzJiYTM2M2U0NzFkZjk3OTJkODc3YTExYjMxMw"
 	type args struct {
 		token string
 	}
@@ -176,7 +176,7 @@ func TestParse256(t *testing.T) {
 
 func Test_newToken(t *testing.T) {
 	var bdata = []byte("data")
-	var token = "eyJwIjoiWkdGMFlRPT0ifS45YzIxMDlmY2I1NDQ2NTE2MTQ0NTUyNjczMGRlNmE0YjI2YTkwOTgz"
+	var token = "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw"
 	type args struct {
 		data interface{}
 		ttl  int64
@@ -206,7 +206,7 @@ func Test_newToken(t *testing.T) {
 
 func Test_parseToken(t *testing.T) {
 	testSigningKey := []byte("secret")
-	token := "eyJwIjoiWkdGMFlRPT0ifS45YzIxMDlmY2I1NDQ2NTE2MTQ0NTUyNjczMGRlNmE0YjI2YTkwOTgz"
+	token := "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw"
 	tokenTTL, _ := NewTemporary("data", 300)
 	tokenTTLExp, _ := NewTemporary("data", 1)
 	invalidToken := "yJwIjoiWkdGMFlRPT0ifS4xNzBlNGU5Zjk3MWE5NzM3YzYwOWJmNmIwMmFiODdlMGIwMTIyZTcz"

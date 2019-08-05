@@ -13,7 +13,7 @@ type example struct {
 
 func main() {
 	// set up signing key, it's highly important, don't forget!
-	signature.SigningKey = "secret%key"
+	signature.SetSigningKey("secret%key")
 
 	signedString, err := signature.New("some data of any type")
 	if err != nil {
