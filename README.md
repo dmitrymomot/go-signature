@@ -7,7 +7,7 @@ It helps me to create confirmation tokens without using database.
 ## Usage
 
 ### Installation:
-```golang
+```bash
 go get -u github.com/dmitrymomot/go-signature
 ```
 
