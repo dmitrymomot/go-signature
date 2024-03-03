@@ -13,6 +13,12 @@ Just a small library to get a signed string with a payload.
 It helps me to create confirmation tokens without using database.
 > Don't use this library to protect sensitive data!
 
+## Features
+
+- **Data Integrity**: Ensures that the data remains unchanged and secure during transit.
+- **Simplified Token Structure**: Generates tokens without the overhead of JWT headers, focusing solely on payload and signature.
+- **Flexibility and Ease of Use**: Provides a straightforward API to work with, requiring minimal setup to sign and verify data.
+
 ## Usage
 
 ### Installation:
@@ -56,6 +62,10 @@ Output:
 ```
 some data of any type
 ```
+
+## Examples
+
+You can find more examples in the [example/main.go](example/main.go) file.
 
 ## License
 
