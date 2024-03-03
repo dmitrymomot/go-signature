@@ -1,246 +1,206 @@
-package signature
+package signature_test
 
 import (
-	"fmt"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/dmitrymomot/go-signature"
+	"github.com/stretchr/testify/require"
 )
 
-func TestNew(t *testing.T) {
-	var bdata = []byte("data")
-	type args struct {
-		data interface{}
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{"success", args{bdata}, "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.data)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestSha1(t *testing.T) {
+	signingKey := "signing-key"
+	signature.SetSigningKey(signingKey)
+
+	t.Run("success: string", func(t *testing.T) {
+		testData := "test123"
+
+		token, err := signature.New(testData)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		data, err := signature.Parse[string](token)
+		require.NoError(t, err)
+		require.Equal(t, testData, data)
+	})
+
+	t.Run("success: int", func(t *testing.T) {
+		testData := 123
+
+		token, err := signature.New(testData)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		data, err := signature.Parse[int](token)
+		require.NoError(t, err)
+		require.Equal(t, testData, data)
+	})
+
+	t.Run("success: struct", func(t *testing.T) {
+		type example struct {
+			ID   uint64
+			Text string
+		}
+		testData := example{ID: 123, Text: "test123"}
+
+		token, err := signature.New(testData)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		data, err := signature.Parse[example](token)
+		require.NoError(t, err)
+		require.Equal(t, testData, data)
+		require.Equal(t, testData.ID, data.ID)
+	})
+
+	t.Run("invalid signature", func(t *testing.T) {
+		testData := "test123"
+
+		token, err := signature.New(testData)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		signature.SetSigningKey("invalid-key")
+		data, err := signature.Parse[string](token)
+		require.Error(t, err)
+		require.Empty(t, data)
+		require.ErrorIs(t, err, signature.ErrInvalidSignature)
+	})
+
+	t.Run("invalid token format", func(t *testing.T) {
+		token := "invalid-token"
+		_, err := signature.Parse[string](token)
+		require.ErrorIs(t, err, signature.ErrInvalidTokenFormat)
+	})
+
+	t.Run("invalid base64 string", func(t *testing.T) {
+		_, err := signature.Parse[string]("invalid==.token")
+		require.ErrorIs(t, err, signature.ErrInvalidToken)
+
+		_, err = signature.Parse[string]("invalid.token++@")
+		require.ErrorIs(t, err, signature.ErrInvalidToken)
+	})
 }
 
-func TestNew256(t *testing.T) {
-	var bdata = []byte("data")
-	var token = "eyJwIjoiWkdGMFlRPT0ifQ.NjEyZmMxODBhZTRjZWFlYjU3YWI3ODUwZDQ1ZGNhYjMxNjRkYzJiYTM2M2U0NzFkZjk3OTJkODc3YTExYjMxMw"
-	type args struct {
-		data interface{}
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{"success", args{bdata}, token, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := New256(tt.args.data)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("New256() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("New256() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestSha256(t *testing.T) {
+	signingKey := "signing-key"
+	signature.SetSigningKey(signingKey)
+
+	t.Run("success", func(t *testing.T) {
+		testData := "test123"
+
+		token, err := signature.New256(testData)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		data, err := signature.Parse256[string](token)
+		require.NoError(t, err)
+		require.Equal(t, testData, data)
+	})
+
+	t.Run("invalid signature", func(t *testing.T) {
+		testData := "test123"
+
+		token, err := signature.New256(testData)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		signature.SetSigningKey("invalid-key")
+		data, err := signature.Parse256[string](token)
+		require.Error(t, err)
+		require.Empty(t, data)
+		require.ErrorIs(t, err, signature.ErrInvalidSignature)
+	})
 }
 
-func TestNewTemporary(t *testing.T) {
-	var bdata = []byte("data")
-	var token = "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw"
-	type args struct {
-		data interface{}
-		ttl  int64
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{"success", args{bdata, 0}, token, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewTemporary(tt.args.data, tt.args.ttl)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewTemporary() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("NewTemporary() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestSha1Temp(t *testing.T) {
+	signingKey := "signing-key"
+	signature.SetSigningKey(signingKey)
+
+	t.Run("success", func(t *testing.T) {
+		testData := "test123"
+		ttl := time.Second * 5
+
+		token, err := signature.NewTemporary(testData, ttl)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		data, err := signature.Parse[string](token)
+		require.NoError(t, err)
+		require.Equal(t, testData, data)
+	})
+
+	t.Run("invalid signature", func(t *testing.T) {
+		testData := "test123"
+		ttl := time.Second * 5
+
+		token, err := signature.NewTemporary(testData, ttl)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		signature.SetSigningKey("invalid-key")
+		data, err := signature.Parse[string](token)
+		require.Error(t, err)
+		require.Empty(t, data)
+		require.ErrorIs(t, err, signature.ErrInvalidSignature)
+	})
+
+	t.Run("expired token", func(t *testing.T) {
+		testData := "test123"
+
+		token, err := signature.NewTemporary(testData, 1)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		data, err := signature.Parse[string](token)
+		require.Error(t, err)
+		require.Empty(t, data)
+		require.ErrorIs(t, err, signature.ErrTokenExpired)
+	})
 }
 
-func TestNew256Temporary(t *testing.T) {
-	var bdata = []byte("data")
-	var token = "eyJwIjoiWkdGMFlRPT0ifQ.NjEyZmMxODBhZTRjZWFlYjU3YWI3ODUwZDQ1ZGNhYjMxNjRkYzJiYTM2M2U0NzFkZjk3OTJkODc3YTExYjMxMw"
-	type args struct {
-		data interface{}
-		ttl  int64
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{"success", args{bdata, 0}, token, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := New256Temporary(tt.args.data, tt.args.ttl)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("New256Temporary() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("New256Temporary() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+func TestSha256Temp(t *testing.T) {
+	signingKey := "signing-key"
+	signature.SetSigningKey(signingKey)
 
-func TestParse(t *testing.T) {
-	var token = "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw"
-	type args struct {
-		token string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    interface{}
-		wantErr bool
-	}{
-		{"success", args{token}, "ZGF0YQ==", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := Parse(tt.args.token)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Parse() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+	t.Run("success", func(t *testing.T) {
+		testData := "test123"
+		ttl := time.Second * 5
 
-func TestParse256(t *testing.T) {
-	var token = "eyJwIjoiWkdGMFlRPT0ifQ.NjEyZmMxODBhZTRjZWFlYjU3YWI3ODUwZDQ1ZGNhYjMxNjRkYzJiYTM2M2U0NzFkZjk3OTJkODc3YTExYjMxMw"
-	type args struct {
-		token string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    interface{}
-		wantErr bool
-	}{
-		{"success", args{token}, "ZGF0YQ==", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := Parse256(tt.args.token)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Parse256() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Parse256() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+		token, err := signature.New256Temporary(testData, ttl)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
 
-func Test_newToken(t *testing.T) {
-	var bdata = []byte("data")
-	var token = "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw"
-	type args struct {
-		data interface{}
-		ttl  int64
-		fn   hmacFunc
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{"success", args{bdata, 0, calculateHmac}, token, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := newToken(tt.args.data, tt.args.ttl, tt.args.fn)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("newToken() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("newToken() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+		data, err := signature.Parse256[string](token)
+		require.NoError(t, err)
+		require.Equal(t, testData, data)
+	})
 
-func Test_parseToken(t *testing.T) {
-	testSigningKey := []byte("secret")
-	token := "eyJwIjoiWkdGMFlRPT0ifQ.OWMyMTA5ZmNiNTQ0NjUxNjE0NDU1MjY3MzBkZTZhNGIyNmE5MDk4Mw"
-	tokenTTL, _ := NewTemporary("data", 300)
-	tokenTTLExp, _ := NewTemporary("data", 1)
-	invalidToken := "yJwIjoiWkdGMFlRPT0ifS4xNzBlNGU5Zjk3MWE5NzM3YzYwOWJmNmIwMmFiODdlMGIwMTIyZTcz"
-	b := []byte("invalid json string")
-	ib := base64Encode([]byte(fmt.Sprintf("%s1.%s", string(b), calculateHmac(b, testSigningKey))))
-	type args struct {
-		token string
-		fn    hmacFunc
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    interface{}
-		wantErr bool
-	}{
-		{"success", args{token, calculateHmac}, "ZGF0YQ==", false},
-		{"success with ttl", args{tokenTTL, calculateHmac}, "data", false},
-		{"invalid token", args{invalidToken, calculateHmac256}, nil, true},
-		{"invalid base64 string", args{"121212===", calculateHmac256}, nil, true},
-		{"validation error", args{ib, calculateHmac}, nil, true},
-		// TODO: {"unmarshaling error", args{ ib, calculateHmac}, nil, false},
-		{"expired", args{tokenTTLExp, calculateHmac}, nil, true},
-	}
-	for _, tt := range tests {
-		time.Sleep(200 * time.Millisecond)
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseToken(tt.args.token, tt.args.fn)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("parseToken() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseToken() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	t.Run("invalid signature", func(t *testing.T) {
+		testData := "test123"
+		ttl := time.Second * 5
+
+		token, err := signature.New256Temporary(testData, ttl)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		signature.SetSigningKey("invalid-key")
+		data, err := signature.Parse256[string](token)
+		require.Error(t, err)
+		require.Empty(t, data)
+		require.ErrorIs(t, err, signature.ErrInvalidSignature)
+	})
+
+	t.Run("expired token", func(t *testing.T) {
+		testData := "test123"
+
+		token, err := signature.New256Temporary(testData, 1)
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		data, err := signature.Parse256[string](token)
+		require.Error(t, err)
+		require.Empty(t, data)
+		require.ErrorIs(t, err, signature.ErrTokenExpired)
+	})
 }
