@@ -13,7 +13,7 @@ type example struct {
 
 func main() {
 	// set up signing key, it's highly important, don't forget!
-	signature.SetSigningKey("secret%key")
+	signature.SetSigningKey("secret-key")
 
 	signedString, err := signature.New("some data of any type")
 	if err != nil {
@@ -21,7 +21,7 @@ func main() {
 	}
 	log.Println("signed string", signedString)
 
-	data, err := signature.Parse(signedString)
+	data, err := signature.Parse[string](signedString)
 	if err != nil {
 		panic(err)
 	}
@@ -33,19 +33,19 @@ func main() {
 	}
 	log.Println("signed int", signedInt)
 
-	siData, err := signature.Parse(signedInt)
+	siData, err := signature.Parse[int](signedInt)
 	if err != nil {
 		panic(err)
 	}
 	log.Println(siData)
 
-	signedStruct, err := signature.New(example{123, "test@m.dev"})
+	signedStruct, err := signature.New(example{ID: 123, Email: "test@m.dev"})
 	if err != nil {
 		panic(err)
 	}
 	log.Println("signed struct", signedStruct)
 
-	ssData, err := signature.Parse(signedStruct)
+	ssData, err := signature.Parse[example](signedStruct)
 	if err != nil {
 		panic(err)
 	}
