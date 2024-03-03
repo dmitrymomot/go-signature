@@ -17,80 +17,84 @@ func SetSigningKey(sk string) {
 }
 
 // New returns sha1-signed string without expiration time
-func New(data interface{}) (string, error) {
+func New[Payload any](data Payload) (string, error) {
 	return newToken(data, 0, calculateHmac)
 }
 
-// New256 returns sha256-signed string without expiration time
-func New256(data interface{}) (string, error) {
+// New256 returns sha256-signed string without expiration time.
+func New256[Payload any](data Payload) (string, error) {
 	return newToken(data, 0, calculateHmac256)
 }
 
 // NewTemporary returns sha1-signed string with expiration time
 // ttl - token life time in seconds
-func NewTemporary(data interface{}, ttl int64) (string, error) {
+func NewTemporary[Payload any](data Payload, ttl time.Duration) (string, error) {
 	return newToken(data, ttl, calculateHmac)
 }
 
 // New256Temporary returns sha256-signed string with expiration time
 // ttl - token life time in seconds
-func New256Temporary(data interface{}, ttl int64) (string, error) {
+func New256Temporary[Payload any](data Payload, ttl time.Duration) (string, error) {
 	return newToken(data, ttl, calculateHmac256)
 }
 
 // Parse token signed by sha1
-func Parse(token string) (interface{}, error) {
-	return parseToken(token, calculateHmac)
+func Parse[Payload any](token string) (Payload, error) {
+	return parseToken[Payload](token, calculateHmac)
 }
 
 // Parse256 parses sha256-signed token
-func Parse256(token string) (interface{}, error) {
-	return parseToken(token, calculateHmac256)
+func Parse256[Payload any](token string) (Payload, error) {
+	return parseToken[Payload](token, calculateHmac256)
 }
 
-type tokenClaims struct {
-	Payload   interface{} `json:"p"`
-	ExpiresAt int64       `json:"e,omitempty"`
+type tokenClaims[Payload any] struct {
+	Payload   Payload `json:"p"`
+	ExpiresAt int64   `json:"e,omitempty"`
 }
 
-func newToken(data interface{}, ttl int64, fn hmacFunc) (string, error) {
-	claims := &tokenClaims{Payload: data}
+func newToken[Payload any](data Payload, ttl time.Duration, fn hmacFunc) (string, error) {
+	claims := &tokenClaims[Payload]{Payload: data}
 	if ttl > 0 {
-		claims.ExpiresAt = time.Now().Add(time.Duration(ttl) * time.Second).Unix()
+		claims.ExpiresAt = time.Now().Add(ttl).Unix()
 	}
 	b, err := json.Marshal(claims)
 	if err != nil {
-		return "", err
+		return "", errors.Join(ErrFailedToMarshalTokenClaims, err)
 	}
-	return fmt.Sprintf("%s.%s", base64Encode(b), base64Encode([]byte(fn(b, []byte(signingKey))))), nil
+	signedStr, err := fn(b, []byte(signingKey))
+	if err != nil {
+		return "", errors.Join(ErrInvalidSignature, err)
+	}
+	return fmt.Sprintf("%s.%s", base64Encode(b), base64Encode([]byte(signedStr))), nil
 }
 
-func parseToken(token string, fn hmacFunc) (interface{}, error) {
+func parseToken[Payload any](token string, fn hmacFunc) (p Payload, err error) {
 	tokenParts := strings.Split(token, ".")
 	if len(tokenParts) != 2 {
-		return nil, errors.New("invalid token")
+		return p, errors.Join(ErrInvalidToken, ErrInvalidTokenFormat)
 	}
 	payload, err := base64Decode(tokenParts[0])
 	if err != nil {
-		return nil, errors.New("could not decode payload")
+		return p, errors.Join(ErrInvalidToken, err)
 	}
 	signature, err := base64Decode(tokenParts[1])
 	if err != nil {
-		return nil, errors.New("could not decode signature")
+		return p, errors.Join(ErrInvalidToken, err)
 	}
 
 	if err := validateHmac(payload, signature, []byte(signingKey), fn); err != nil {
-		return nil, err
+		return p, errors.Join(ErrInvalidToken, err)
 	}
 
-	t := new(tokenClaims)
+	t := new(tokenClaims[Payload])
 	if err := json.Unmarshal(payload, t); err != nil {
-		return nil, err
+		return p, errors.Join(ErrInvalidToken, err)
 	}
 
 	if t.ExpiresAt > 0 {
 		if time.Now().After(time.Unix(t.ExpiresAt, 0)) {
-			return nil, errors.New("token expired")
+			return p, errors.Join(ErrInvalidToken, ErrTokenExpired)
 		}
 	}
 
