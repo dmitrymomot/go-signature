@@ -9,9 +9,12 @@ import (
 	"hash"
 )
 
-type hmacFunc func(securedInput, key []byte) (string, error)
+type (
+	hmacFunc     func(securedInput, key []byte) (string, error)
+	validateFunc func(securedInput, sign, key []byte, fn hmacFunc) error
+)
 
-func calculateHmac(securedInput, key []byte) (string, error) {
+func CalculateHmac(securedInput, key []byte) (string, error) {
 	hasher := hmac.New(func() hash.Hash { return sha1.New() }, key)
 	if _, err := hasher.Write(securedInput); err != nil {
 		return "", errors.Join(ErrorCalculatingHmac, err)
@@ -19,7 +22,7 @@ func calculateHmac(securedInput, key []byte) (string, error) {
 	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
-func calculateHmac256(securedInput, key []byte) (string, error) {
+func CalculateHmac256(securedInput, key []byte) (string, error) {
 	hasher := hmac.New(func() hash.Hash { return sha256.New() }, key)
 	if _, err := hasher.Write(securedInput); err != nil {
 		return "", errors.Join(ErrorCalculatingHmac, err)
@@ -27,7 +30,7 @@ func calculateHmac256(securedInput, key []byte) (string, error) {
 	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
-func validateHmac(securedInput, sign, key []byte, fn hmacFunc) error {
+func ValidateHmac(securedInput, sign, key []byte, fn hmacFunc) error {
 	sum, err := fn(securedInput, key)
 	if err != nil {
 		return errors.Join(ErrInvalidSignature, err)

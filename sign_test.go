@@ -9,17 +9,16 @@ import (
 )
 
 func TestSha1(t *testing.T) {
-	signingKey := "signing-key"
-	signature.SetSigningKey(signingKey)
+	signingKey := []byte("signing-key")
 
 	t.Run("success: string", func(t *testing.T) {
 		testData := "test123"
 
-		token, err := signature.New(testData)
+		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		data, err := signature.Parse[string](token)
+		data, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.NoError(t, err)
 		require.Equal(t, testData, data)
 	})
@@ -27,11 +26,11 @@ func TestSha1(t *testing.T) {
 	t.Run("success: int", func(t *testing.T) {
 		testData := 123
 
-		token, err := signature.New(testData)
+		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		data, err := signature.Parse[int](token)
+		data, err := signature.ParseToken[int](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.NoError(t, err)
 		require.Equal(t, testData, data)
 	})
@@ -43,11 +42,11 @@ func TestSha1(t *testing.T) {
 		}
 		testData := example{ID: 123, Text: "test123"}
 
-		token, err := signature.New(testData)
+		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		data, err := signature.Parse[example](token)
+		data, err := signature.ParseToken[example](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.NoError(t, err)
 		require.Equal(t, testData, data)
 		require.Equal(t, testData.ID, data.ID)
@@ -56,12 +55,11 @@ func TestSha1(t *testing.T) {
 	t.Run("invalid signature", func(t *testing.T) {
 		testData := "test123"
 
-		token, err := signature.New(testData)
+		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		signature.SetSigningKey("invalid-key")
-		data, err := signature.Parse[string](token)
+		data, err := signature.ParseToken[string]([]byte("invalid-key"), token, signature.CalculateHmac, signature.ValidateHmac)
 		require.Error(t, err)
 		require.Empty(t, data)
 		require.ErrorIs(t, err, signature.ErrInvalidSignature)
@@ -69,31 +67,32 @@ func TestSha1(t *testing.T) {
 
 	t.Run("invalid token format", func(t *testing.T) {
 		token := "invalid-token"
-		_, err := signature.Parse[string](token)
+		_, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.ErrorIs(t, err, signature.ErrInvalidTokenFormat)
 	})
 
 	t.Run("invalid base64 string", func(t *testing.T) {
-		_, err := signature.Parse[string]("invalid==.token")
+		token := "invalid==.token"
+		_, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.ErrorIs(t, err, signature.ErrInvalidToken)
 
-		_, err = signature.Parse[string]("invalid.token++@")
+		token = "invalid.token++@"
+		_, err = signature.ParseToken[string](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.ErrorIs(t, err, signature.ErrInvalidToken)
 	})
 }
 
 func TestSha256(t *testing.T) {
-	signingKey := "signing-key"
-	signature.SetSigningKey(signingKey)
+	signingKey := []byte("signing-key")
 
 	t.Run("success", func(t *testing.T) {
 		testData := "test123"
 
-		token, err := signature.New256(testData)
+		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac256)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		data, err := signature.Parse256[string](token)
+		data, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac256, signature.ValidateHmac)
 		require.NoError(t, err)
 		require.Equal(t, testData, data)
 	})
@@ -101,12 +100,11 @@ func TestSha256(t *testing.T) {
 	t.Run("invalid signature", func(t *testing.T) {
 		testData := "test123"
 
-		token, err := signature.New256(testData)
+		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac256)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		signature.SetSigningKey("invalid-key")
-		data, err := signature.Parse256[string](token)
+		data, err := signature.ParseToken[string]([]byte("invalid-key"), token, signature.CalculateHmac256, signature.ValidateHmac)
 		require.Error(t, err)
 		require.Empty(t, data)
 		require.ErrorIs(t, err, signature.ErrInvalidSignature)
@@ -114,18 +112,17 @@ func TestSha256(t *testing.T) {
 }
 
 func TestSha1Temp(t *testing.T) {
-	signingKey := "signing-key"
-	signature.SetSigningKey(signingKey)
+	signingKey := []byte("signing-key")
 
 	t.Run("success", func(t *testing.T) {
 		testData := "test123"
 		ttl := time.Second * 5
 
-		token, err := signature.NewTemporary(testData, ttl)
+		token, err := signature.NewToken(signingKey, testData, ttl, signature.CalculateHmac)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		data, err := signature.Parse[string](token)
+		data, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.NoError(t, err)
 		require.Equal(t, testData, data)
 	})
@@ -134,12 +131,11 @@ func TestSha1Temp(t *testing.T) {
 		testData := "test123"
 		ttl := time.Second * 5
 
-		token, err := signature.NewTemporary(testData, ttl)
+		token, err := signature.NewToken(signingKey, testData, ttl, signature.CalculateHmac)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		signature.SetSigningKey("invalid-key")
-		data, err := signature.Parse[string](token)
+		data, err := signature.ParseToken[string]([]byte("invalid-key"), token, signature.CalculateHmac, signature.ValidateHmac)
 		require.Error(t, err)
 		require.Empty(t, data)
 		require.ErrorIs(t, err, signature.ErrInvalidSignature)
@@ -148,11 +144,11 @@ func TestSha1Temp(t *testing.T) {
 	t.Run("expired token", func(t *testing.T) {
 		testData := "test123"
 
-		token, err := signature.NewTemporary(testData, 1)
+		token, err := signature.NewToken(signingKey, testData, 1, signature.CalculateHmac)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		data, err := signature.Parse[string](token)
+		data, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.Error(t, err)
 		require.Empty(t, data)
 		require.ErrorIs(t, err, signature.ErrTokenExpired)
@@ -160,18 +156,17 @@ func TestSha1Temp(t *testing.T) {
 }
 
 func TestSha256Temp(t *testing.T) {
-	signingKey := "signing-key"
-	signature.SetSigningKey(signingKey)
+	signingKey := []byte("signing-key")
 
 	t.Run("success", func(t *testing.T) {
 		testData := "test123"
 		ttl := time.Second * 5
 
-		token, err := signature.New256Temporary(testData, ttl)
+		token, err := signature.NewToken(signingKey, testData, ttl, signature.CalculateHmac256)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		data, err := signature.Parse256[string](token)
+		data, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac256, signature.ValidateHmac)
 		require.NoError(t, err)
 		require.Equal(t, testData, data)
 	})
@@ -180,12 +175,11 @@ func TestSha256Temp(t *testing.T) {
 		testData := "test123"
 		ttl := time.Second * 5
 
-		token, err := signature.New256Temporary(testData, ttl)
+		token, err := signature.NewToken(signingKey, testData, ttl, signature.CalculateHmac256)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		signature.SetSigningKey("invalid-key")
-		data, err := signature.Parse256[string](token)
+		data, err := signature.ParseToken[string]([]byte("invalid-key"), token, signature.CalculateHmac256, signature.ValidateHmac)
 		require.Error(t, err)
 		require.Empty(t, data)
 		require.ErrorIs(t, err, signature.ErrInvalidSignature)
@@ -194,11 +188,11 @@ func TestSha256Temp(t *testing.T) {
 	t.Run("expired token", func(t *testing.T) {
 		testData := "test123"
 
-		token, err := signature.New256Temporary(testData, 1)
+		token, err := signature.NewToken(signingKey, testData, 1, signature.CalculateHmac256)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		data, err := signature.Parse256[string](token)
+		data, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac256, signature.ValidateHmac)
 		require.Error(t, err)
 		require.Empty(t, data)
 		require.ErrorIs(t, err, signature.ErrTokenExpired)
