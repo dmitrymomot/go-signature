@@ -1,12 +1,12 @@
 # go-signature
 
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/dmitrymomot/go-signature/v2)](https://github.com/dmitrymomot/go-signature/v2)
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/dmitrymomot/go-signature)](https://github.com/dmitrymomot/go-signature)
 [![Go Reference](https://pkg.go.dev/badge/github.com/dmitrymomot/go-signature/v2.svg)](https://pkg.go.dev/github.com/dmitrymomot/go-signature/v2)
-[![License](https://img.shields.io/github/license/dmitrymomot/go-signature/v2)](https://github.com/dmitrymomot/go-signature/v2/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/dmitrymomot/go-signature)](https://github.com/dmitrymomot/go-signature/blob/main/LICENSE)
 
-[![Tests](https://github.com/dmitrymomot/go-signature/v2/actions/workflows/tests.yml/badge.svg)](https://github.com/dmitrymomot/go-signature/v2/actions/workflows/tests.yml)
-[![CodeQL Analysis](https://github.com/dmitrymomot/go-signature/v2/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/dmitrymomot/go-signature/v2/actions/workflows/codeql-analysis.yml)
-[![GolangCI Lint](https://github.com/dmitrymomot/go-signature/v2/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/dmitrymomot/go-signature/v2/actions/workflows/golangci-lint.yml)
+[![Tests](https://github.com/dmitrymomot/go-signature/actions/workflows/tests.yml/badge.svg)](https://github.com/dmitrymomot/go-signature/actions/workflows/tests.yml)
+[![CodeQL Analysis](https://github.com/dmitrymomot/go-signature/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/dmitrymomot/go-signature/actions/workflows/codeql-analysis.yml)
+[![GolangCI Lint](https://github.com/dmitrymomot/go-signature/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/dmitrymomot/go-signature/actions/workflows/golangci-lint.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dmitrymomot/go-signature/v2)](https://goreportcard.com/report/github.com/dmitrymomot/go-signature/v2)
 
 Just a small library to get a signed string with a payload.
