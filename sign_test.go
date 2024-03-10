@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dmitrymomot/go-signature"
+	"github.com/dmitrymomot/go-signature/v2"
 	"github.com/stretchr/testify/require"
 )
 

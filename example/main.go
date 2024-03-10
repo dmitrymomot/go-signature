@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/dmitrymomot/go-signature"
+	"github.com/dmitrymomot/go-signature/v2"
 )
 
 // Define a struct to sign. Or use any other data type you want.
