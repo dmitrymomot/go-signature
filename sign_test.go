@@ -9,9 +9,13 @@ import (
 )
 
 func TestSha1(t *testing.T) {
+	t.Parallel()
+
 	signingKey := []byte("signing-key")
 
 	t.Run("success: string", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac)
@@ -24,6 +28,8 @@ func TestSha1(t *testing.T) {
 	})
 
 	t.Run("success: int", func(t *testing.T) {
+		t.Parallel()
+
 		testData := 123
 
 		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac)
@@ -36,6 +42,8 @@ func TestSha1(t *testing.T) {
 	})
 
 	t.Run("success: struct", func(t *testing.T) {
+		t.Parallel()
+
 		type example struct {
 			ID   uint64
 			Text string
@@ -53,6 +61,8 @@ func TestSha1(t *testing.T) {
 	})
 
 	t.Run("invalid signature", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac)
@@ -66,12 +76,16 @@ func TestSha1(t *testing.T) {
 	})
 
 	t.Run("invalid token format", func(t *testing.T) {
+		t.Parallel()
+
 		token := "invalid-token"
 		_, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.ErrorIs(t, err, signature.ErrInvalidTokenFormat)
 	})
 
 	t.Run("invalid base64 string", func(t *testing.T) {
+		t.Parallel()
+
 		token := "invalid==.token"
 		_, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
 		require.ErrorIs(t, err, signature.ErrInvalidToken)
@@ -83,9 +97,13 @@ func TestSha1(t *testing.T) {
 }
 
 func TestSha256(t *testing.T) {
+	t.Parallel()
+
 	signingKey := []byte("signing-key")
 
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac256)
@@ -98,6 +116,8 @@ func TestSha256(t *testing.T) {
 	})
 
 	t.Run("invalid signature", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := signature.NewToken(signingKey, testData, 0, signature.CalculateHmac256)
@@ -112,9 +132,13 @@ func TestSha256(t *testing.T) {
 }
 
 func TestSha1Temp(t *testing.T) {
+	t.Parallel()
+
 	signingKey := []byte("signing-key")
 
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 		ttl := time.Second * 5
 
@@ -128,6 +152,8 @@ func TestSha1Temp(t *testing.T) {
 	})
 
 	t.Run("invalid signature", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 		ttl := time.Second * 5
 
@@ -142,6 +168,8 @@ func TestSha1Temp(t *testing.T) {
 	})
 
 	t.Run("expired token", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := signature.NewToken(signingKey, testData, 1, signature.CalculateHmac)
@@ -156,9 +184,13 @@ func TestSha1Temp(t *testing.T) {
 }
 
 func TestSha256Temp(t *testing.T) {
+	t.Parallel()
+
 	signingKey := []byte("signing-key")
 
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 		ttl := time.Second * 5
 
@@ -172,6 +204,8 @@ func TestSha256Temp(t *testing.T) {
 	})
 
 	t.Run("invalid signature", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 		ttl := time.Second * 5
 
@@ -186,6 +220,8 @@ func TestSha256Temp(t *testing.T) {
 	})
 
 	t.Run("expired token", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := signature.NewToken(signingKey, testData, 1, signature.CalculateHmac256)

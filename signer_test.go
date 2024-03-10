@@ -9,10 +9,14 @@ import (
 )
 
 func TestSigner_String(t *testing.T) {
+	t.Parallel()
+
 	s := signature.NewSigner[string]([]byte("signing-key"))
 	require.NotNil(t, s)
 
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := s.Sign(testData)
@@ -25,6 +29,8 @@ func TestSigner_String(t *testing.T) {
 	})
 
 	t.Run("success: temporary", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := s.SignTemporary(testData, time.Second*5)
@@ -38,6 +44,8 @@ func TestSigner_String(t *testing.T) {
 }
 
 func TestSigner_Struct(t *testing.T) {
+	t.Parallel()
+
 	type example struct {
 		ID   uint64
 		Text string
@@ -47,6 +55,8 @@ func TestSigner_Struct(t *testing.T) {
 	require.NotNil(t, s)
 
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
 		testData := example{
 			ID:   123,
 			Text: "test123",
@@ -62,6 +72,8 @@ func TestSigner_Struct(t *testing.T) {
 	})
 
 	t.Run("success: temporary", func(t *testing.T) {
+		t.Parallel()
+
 		testData := example{
 			ID:   123,
 			Text: "test123",
@@ -78,10 +90,14 @@ func TestSigner_Struct(t *testing.T) {
 }
 
 func TestSigner256_String(t *testing.T) {
+	t.Parallel()
+
 	s := signature.NewSigner256[string]([]byte("signing-key"))
 	require.NotNil(t, s)
 
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := s.Sign(testData)
@@ -94,6 +110,8 @@ func TestSigner256_String(t *testing.T) {
 	})
 
 	t.Run("success: temporary", func(t *testing.T) {
+		t.Parallel()
+
 		testData := "test123"
 
 		token, err := s.SignTemporary(testData, time.Second*5)
