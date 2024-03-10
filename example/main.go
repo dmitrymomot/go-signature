@@ -1,53 +1,32 @@
 package main
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/dmitrymomot/go-signature"
 )
 
+// Define a struct to sign. Or use any other data type you want.
 type example struct {
 	ID    uint64
 	Email string
 }
 
 func main() {
-	// set up signing key, it's highly important, don't forget!
-	signature.SetSigningKey("secret-key")
+	// Create a new signer
+	s := signature.NewSigner[example]([]byte("signing-key"))
 
-	signedString, err := signature.New("some data of any type")
+	// Sign and parse a token
+	token, err := s.Sign(example{ID: 123, Email: "test123"})
 	if err != nil {
 		panic(err)
 	}
-	log.Println("signed string", signedString)
+	fmt.Println(token)
 
-	data, err := signature.Parse[string](signedString)
+	// Parse a token and print the data
+	data, err := s.Parse(token)
 	if err != nil {
 		panic(err)
 	}
-	log.Println(data)
-
-	signedInt, err := signature.New(9834)
-	if err != nil {
-		panic(err)
-	}
-	log.Println("signed int", signedInt)
-
-	siData, err := signature.Parse[int](signedInt)
-	if err != nil {
-		panic(err)
-	}
-	log.Println(siData)
-
-	signedStruct, err := signature.New(example{ID: 123, Email: "test@m.dev"})
-	if err != nil {
-		panic(err)
-	}
-	log.Println("signed struct", signedStruct)
-
-	ssData, err := signature.Parse[example](signedStruct)
-	if err != nil {
-		panic(err)
-	}
-	log.Println(ssData)
+	fmt.Println(data)
 }
