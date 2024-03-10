@@ -22,50 +22,91 @@ It helps me to create confirmation tokens without using database.
 ## Usage
 
 ### Installation:
+
 ```bash
 go get -u github.com/dmitrymomot/go-signature
 ```
 
-### Set up signing key
+### Example:
+
+Use the Signer  to sign some predefined data type and parse the token back to the original data.
+
 ```golang
-import signature "github.com/dmitrymomot/go-signature"
+package main
 
-...
-signature.SetSigningKey("secret-key")
-...
-```
-Signing key will be set globally, so you don't need defining it each times
+import (
+	"fmt"
 
-### Create signed string:
-```golang
-import signature "github.com/dmitrymomot/go-signature"
+	"github.com/dmitrymomot/go-signature"
+)
 
-...
-signedString, _ := signature.New("some data of any type")
-log.Println(signedString)
-...
-```
-Output:
-```
-eyJwIjoic29tZSBkYXRhIG9mIGFueSB0eXBlIn0.MzYwMzA0ZGVhNWRmMjdjOTM0ZjY1NzU3YWUwM2I0MDZmODRiMzRiMw
-```
-
-### Parse signed string:
-```golang
-data, err := signature.Parse("eyJwIjoic29tZSBkYXRhIG9mIGFueSB0eXBlIn0.MzYwMzA0ZGVhNWRmMjdjOTM0ZjY1NzU3YWUwM2I0MDZmODRiMzRiMw")
-if err != nil {
-    panic(err)
+// Define a struct to sign. Or use any other data type you want.
+type example struct {
+	ID    uint64
+	Email string
 }
-log.Println(data)
+
+func main() {
+	// Create a new signer
+	s := signature.NewSigner[example]([]byte("signing-key"))
+
+	// Sign and parse a token
+	token, err := s.Sign(example{ID: 123, Email: "test123"})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(token)
+
+	// Parse a token and print the data
+	data, err := s.Parse(token)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(data)
+}
 ```
+
 Output:
-```
-some data of any type
+
+```shell
+eyJwIjp7IklEIjoxMjMsIkVtYWlsIjoidGVzdDEyMyJ9fQ.Mjg1MDVkOTNjNTdkNDhjMjk2NWQxOWZhNGY3ZDU2ZjQ3NWFlNWUxYw
+
+{123 test123}
 ```
 
-## Examples
+You can find this example in the [example/main.go](example/main.go) file.
 
-You can find more examples in the [example/main.go](example/main.go) file.
+#### Using of functions directly
+
+You can use the `NewToken` and `ParseToken` functions directly without creating a new signer.
+
+```golang
+package main
+
+import (
+    "fmt"
+
+    "github.com/dmitrymomot/go-signature"
+)
+
+func main() {
+    signingKey := []byte("signing-key")
+    someData := "some data"
+
+    token, err := signature.NewToken(signingKey, someData, 0, signature.CalculateHmac)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(token)
+
+    // Parse a token and print the data. You need to know the type of the data to parse it.
+    data, err := signature.ParseToken[string](signingKey, token, signature.CalculateHmac, signature.ValidateHmac)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(data)
+}
+```
 
 ## License
 
